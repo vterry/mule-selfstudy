@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd">
+    <http:listener-config name="Main_Task_Listener" host="0.0.0.0" port="8081" doc:name="HTTP Listener Configuration"/>
+    <db:generic-config name="TASK_DB" url="jdbc:h2:mem:test;INIT=RUNSCRIPT FROM 'classpath:task_db.sql'" driverClassName="org.h2.Driver" doc:name="Generic Database Configuration"/>
+    <flow name="Tasks_flow">
+        <http:listener config-ref="Main_Task_Listener" path="/task" doc:name="HTTP"/>
+        <set-payload value="#[message.inboundProperties.'http.query.params']" doc:name="Task Request"/>
+        <choice doc:name="Choice">
+            <when expression="">
+                <db:insert config-ref="TASK_DB" doc:name="Insert Task">
+                    <db:parameterized-query><![CDATA[Insert into TO_DOS (NAME_TASK, TASK_DESC,EXPECTED_DATE)
+Values ();]]></db:parameterized-query>
+                </db:insert>
+            </when>
+            <otherwise>
+                <db:select config-ref="TASK_DB" doc:name="Search Task">
+                    <db:parameterized-query><![CDATA[Select *
+From TO_DOS
+Where Id = #[payload.id]
+;]]></db:parameterized-query>
+                </db:select>
+                <dw:transform-message doc:name="Transform Message" metadata:id="64278594-01ab-4808-a385-50047c8ddf02">
+                    <dw:input-payload doc:sample="sample_data\list_map.dwl"/>
+                    <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+{
+	ID: payload[0].ID,
+	"Target date": payload[0].EXPECTED_DATE,
+	"Task name": payload[0].NAME_TASK,
+	Description: payload[0].TASK_DESC
+}]]></dw:set-payload>
+                </dw:transform-message>
+            </otherwise>
+        </choice>
+    </flow>
+</mule>
