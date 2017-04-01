@@ -4,3 +4,4 @@ Features:
 
   - Cadastro de tarefas
   - Busca de tarefas através do ID
+  - Remoção de tarefas
