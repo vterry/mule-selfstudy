@@ -31,6 +31,17 @@ Values (#[flowVars.taskname], #[flowVars.description], #[flowVars.target]);]]></
                 </db:delete>
                 <set-payload value="{ &quot;status&quot;: &quot;success&quot;, &quot;statusDescription&quot;: &quot;Tasks deteled successfully&quot;}" doc:name="Succes"/>
             </when>
+            <when expression="#[message.inboundProperties.'http.method' == 'PUT']">
+                <db:update config-ref="TASK_DB" doc:name="Update Task">
+                    <db:parameterized-query><![CDATA[Update To_dos set
+  task_name = #[flowVars.taskname],
+  task_description = #[flowVars.description],
+  expected_date = #[flowVars.target]
+Where id = #[flowVars.id]
+;]]></db:parameterized-query>
+                </db:update>
+                <set-payload value="{ &quot;status&quot;: &quot;success&quot;, &quot;statusDescription&quot;: &quot;Tasks updated successfully&quot;}" doc:name="Success"/>
+            </when>
             <otherwise>
                 <db:select config-ref="TASK_DB" doc:name="Search Task">
                     <db:parameterized-query><![CDATA[Select *
