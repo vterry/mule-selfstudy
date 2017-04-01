@@ -10,22 +10,32 @@ http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/m
 http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
 http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd">
     <http:listener-config name="Main_Task_Listener" host="0.0.0.0" port="8081" doc:name="HTTP Listener Configuration"/>
-    <db:generic-config name="TASK_DB" url="jdbc:h2:mem:test;INIT=RUNSCRIPT FROM 'classpath:task_db.sql'" driverClassName="org.h2.Driver" doc:name="Generic Database Configuration"/>
+    <db:generic-config name="TASK_DB" url="jdbc:mysql://localhost:3306/tasks?user=root&amp;password=r00t" driverClassName="com.mysql.jdbc.Driver" doc:name="Generic Database Configuration"/>
     <flow name="Tasks_flow">
         <http:listener config-ref="Main_Task_Listener" path="/task" doc:name="HTTP"/>
-        <set-payload value="#[message.inboundProperties.'http.query.params']" doc:name="Task Request"/>
+        <expression-component doc:name="Get Query Params"><![CDATA[flowVars.id = message.inboundProperties['http.query.params'].id;
+flowVars.taskname = message.inboundProperties['http.query.params'].taskname;
+flowVars.description = message.inboundProperties['http.query.params'].description;
+flowVars.target = message.inboundProperties['http.query.params'].target;]]></expression-component>
         <choice doc:name="Choice">
-            <when expression="">
+            <when expression="#[message.inboundProperties.'http.method' == 'POST']">
                 <db:insert config-ref="TASK_DB" doc:name="Insert Task">
-                    <db:parameterized-query><![CDATA[Insert into TO_DOS (NAME_TASK, TASK_DESC,EXPECTED_DATE)
-Values ();]]></db:parameterized-query>
+                    <db:parameterized-query><![CDATA[Insert into TO_DOS (TASK_NAME, TASK_DESCRIPTION,EXPECTED_DATE)
+Values (#[flowVars.taskname], #[flowVars.description], #[flowVars.target]);]]></db:parameterized-query>
                 </db:insert>
+                <set-payload value="{ &quot;status&quot;: &quot;success&quot;, &quot;statusDescription&quot;: &quot;Tasks registered successfully&quot;}" doc:name="Sucess"/>
+            </when>
+            <when expression="#[message.inboundProperties.'http.method' == 'DELETE']">
+                <db:delete config-ref="TASK_DB" doc:name="Delete Task">
+                    <db:parameterized-query><![CDATA[Delete from To_dos where Id = #[flowVars.id];]]></db:parameterized-query>
+                </db:delete>
+                <set-payload value="{ &quot;status&quot;: &quot;success&quot;, &quot;statusDescription&quot;: &quot;Tasks deteled successfully&quot;}" doc:name="Succes"/>
             </when>
             <otherwise>
                 <db:select config-ref="TASK_DB" doc:name="Search Task">
                     <db:parameterized-query><![CDATA[Select *
 From TO_DOS
-Where Id = #[payload.id]
+Where Id = #[flowVars.id]
 ;]]></db:parameterized-query>
                 </db:select>
                 <dw:transform-message doc:name="Transform Message" metadata:id="64278594-01ab-4808-a385-50047c8ddf02">
@@ -36,11 +46,20 @@ Where Id = #[payload.id]
 {
 	ID: payload[0].ID,
 	"Target date": payload[0].EXPECTED_DATE,
-	"Task name": payload[0].NAME_TASK,
-	Description: payload[0].TASK_DESC
+	"Task name": payload[0].TASK_NAME,
+	Description: payload[0].TASK_DESCRIPTION
 }]]></dw:set-payload>
                 </dw:transform-message>
             </otherwise>
         </choice>
+        <exception-strategy ref="Choice_Exception_Strategy" doc:name="Reference Exception Strategy"/>
+
     </flow>
+    <choice-exception-strategy name="Choice_Exception_Strategy">
+        <catch-exception-strategy when="#[exception.causeMatches('com.mysql.jdbc.exceptions.*')]" doc:name="Catch Exception Strategy">
+            <set-property propertyName="http.status" value="#[500]" doc:name="Property"/>
+            <logger message="Error: #[exception]" level="ERROR" doc:name="Logger"/>
+            <set-payload value="Ocorreu um erro durante execu&#231;&#227;o: #[exception]" doc:name="Set Payload"/>
+        </catch-exception-strategy>
+    </choice-exception-strategy>
 </mule>

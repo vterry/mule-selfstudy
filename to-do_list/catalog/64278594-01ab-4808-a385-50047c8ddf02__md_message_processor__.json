@@ -1,0 +1,11 @@
+{
+    "inputMessageMetadata": {},
+    "outputMessageMetadata": {
+        "messagePayload": {
+            "connectorName": "#_custom_mule_metadata_type_#",
+            "typeId": "Task_Schema"
+        }
+    },
+    "id": "64278594-01ab-4808-a385-50047c8ddf02",
+    "version": "5.2.0.0"
+}

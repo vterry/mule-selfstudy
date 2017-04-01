@@ -9,7 +9,8 @@
 	<classpathentry kind="src" output="target/test-classes" path="src/test/resources"/>
 	<classpathentry kind="src" path="src/main/api"/>
 	<classpathentry kind="src" path="src/main/wsdl"/>
-	<classpathentry kind="src" path="src/test/munit"/>
-	<classpathentry kind="lib" path="src/main/resources/h2-1.4.187.jar"/>
+	<classpathentry kind="lib" path="src/main/resources/mysql-connector-java-5.1.21.jar"/>
+	<classpathentry kind="con" path="MUNIT_RUNTIME"/>
+	<classpathentry kind="src" output="target/test-classes" path="src/test/munit"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>
