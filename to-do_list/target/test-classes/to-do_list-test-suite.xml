@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:spring="http://www.springframework.org/schema/beans"
+	xmlns:core="http://www.mulesoft.org/schema/mule/core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd">
+	<munit:config name="munit" doc:name="MUnit configuration" />
+	<spring:beans>
+		<spring:import resource="classpath:to-do_list.xml" />
+	</spring:beans>
+	<munit:test name="Insert_Flow_Test" description="Test">
+		<munit:set payload="#[new Object()]" doc:name="Set HTTP query params">
+			<munit:inbound-properties>
+				<munit:inbound-property key="http.query.params"
+					value="#[['taskname': 'Trabalhar', 'description': 'TESTE', 'target': '23-MAR-2018']]" />
+				<munit:inbound-property key="http.method"
+					value="POST" />
+			</munit:inbound-properties>
+		</munit:set>
+		<flow-ref name="Tasks_flow" doc:name="Tasks_flow" />
+		<munit:assert-payload-equals
+			expectedValue="{ &quot;status&quot;: &quot;success&quot;, &quot;statusDescription&quot;: &quot;Tasks registered successfully&quot;}"
+			doc:name="Assert Payload" />
+	</munit:test>
+	<munit:test name="Select_Flow_Test" description="Test">
+		<munit:set payload="#[new Object()]" doc:name="Set HTTP query params">
+			<munit:inbound-properties>
+				<munit:inbound-property key="http.query.params"
+					value="#[['id': '1']]" />
+				<munit:inbound-property key="http.method"
+					value="GET" />
+			</munit:inbound-properties>
+		</munit:set>
+        <expression-component doc:name="Expression"><![CDATA[flowVars.expectedJsonResponse = '{ "ID": 1, "Target date": "31-MAR-17", "Task name": "Estudar", "Description": "Treinar um pouco de MULE" }']]></expression-component>
+		<flow-ref name="Tasks_flow" doc:name="Tasks_flow" />
+	</munit:test>
+</mule>
