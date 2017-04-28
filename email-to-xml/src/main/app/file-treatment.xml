@@ -29,7 +29,7 @@ http://www.mulesoft.org/schema/mule/smtps http://www.mulesoft.org/schema/mule/sm
 
 	<flow name="gerdau_email_consumer">
 		<imaps:inbound-endpoint connector-ref="imapsConnector"
-			doc:name="Poll emails" host="imap.gmail.com" password="0211#$F@m1lia4"
+			doc:name="Poll emails" host="imap.gmail.com" password="**************"
 			port="993" responseTimeout="10000" user="vf.souzaac@gmail.com" />
 		<expression-transformer doc:name="Attachments Evaluation">
 			<return-argument evaluator="attachments-list"
@@ -48,7 +48,7 @@ N&#195;O RESPONDA ESSE EMAIL - RESPOSTA AUTOM&#193;TICA"
         <set-property propertyName="subject" value="[CONFIRMA&#199;&#195;O] - #[flowVars.subject]" doc:name="Set Subject Property"/>
 		<smtp:outbound-endpoint connector-ref="Gmail"
 			host="smtp.gmail.com" port="587" user="vf.souzaac%40gmail.com"
-			password="0211#$F@m1lia4" to="#[flowVars.from]" from="vf.souzaac@gmail.com" doc:name="Send Confirmation Receivement Email" responseTimeout="10000"/>
+			password="**************" to="#[flowVars.from]" from="vf.souzaac@gmail.com" doc:name="Send Confirmation Receivement Email" responseTimeout="10000"/>
 
 		<set-payload doc:name="Set Payload to Attachment content"
 			metadata:id="359939d1-e0b0-4882-ba79-4eebc7ff9620" mimeType="application/xml"
@@ -67,7 +67,7 @@ MOTIVO: Email sem anexo ou formato inv&#225;lido.
 
 N&#195;O RESPONDA ESSE EMAIL - RESPOSTA AUTOM&#193;TICA" doc:name="Error message"/>
             <set-property propertyName="subject" value="[ERRO DE PROCESSAMENTO] - #[flowVars.subject]" doc:name="Error Subject Property"/>
-            <smtp:outbound-endpoint host="smtp.gmail.com" port="587" user="vf.souzaac%40gmail.com" password="0211#$F@m1lia4" connector-ref="Gmail" to="#[flowVars.from]" from="vf.souzaac@gmail.com" responseTimeout="10000" doc:name="Send Error Receivement Email"/>
+            <smtp:outbound-endpoint host="smtp.gmail.com" port="587" user="vf.souzaac%40gmail.com" password="**************" connector-ref="Gmail" to="#[flowVars.from]" from="vf.souzaac@gmail.com" responseTimeout="10000" doc:name="Send Error Receivement Email"/>
         </catch-exception-strategy>
     </choice-exception-strategy>
 </mule>
