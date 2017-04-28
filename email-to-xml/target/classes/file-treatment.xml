@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:smtps="http://www.mulesoft.org/schema/mule/smtps"
+	xmlns:smtp="http://www.mulesoft.org/schema/mule/smtp" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:imap="http://www.mulesoft.org/schema/mule/imap"
+	xmlns:imaps="http://www.mulesoft.org/schema/mule/imaps" xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata"
+	xmlns:mulexml="http://www.mulesoft.org/schema/mule/xml" xmlns:spring="http://www.springframework.org/schema/beans"
+	xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/imap http://www.mulesoft.org/schema/mule/imap/current/mule-imap.xsd
+http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-current.xsd
+http://www.mulesoft.org/schema/mule/imaps http://www.mulesoft.org/schema/mule/imaps/current/mule-imaps.xsd
+http://www.mulesoft.org/schema/mule/xml http://www.mulesoft.org/schema/mule/xml/current/mule-xml.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.mulesoft.org/schema/mule/smtp http://www.mulesoft.org/schema/mule/smtp/current/mule-smtp.xsd
+http://www.mulesoft.org/schema/mule/smtps http://www.mulesoft.org/schema/mule/smtps/current/mule-smtps.xsd">
+
+
+	<imaps:connector checkFrequency="100" doc:name="IMAP"
+		name="imapsConnector" validateConnections="true">
+	</imaps:connector>
+    <smtp:gmail-connector name="Gmail" validateConnections="true" doc:name="Gmail"/>
+
+
+	<flow name="gerdau_email_consumer">
+		<imaps:inbound-endpoint connector-ref="imapsConnector"
+			doc:name="Poll emails" host="imap.gmail.com" password="0211#$F@m1lia4"
+			port="993" responseTimeout="10000" user="vf.souzaac@gmail.com" />
+		<expression-transformer doc:name="Attachments Evaluation">
+			<return-argument evaluator="attachments-list"
+				expression="*.xml" />
+		</expression-transformer>
+		<expression-component doc:name="Set Common Variables"><![CDATA[flowVars.from = message.inboundProperties.from;
+flowVars.subject = message.inboundProperties.subject;
+flowVars.attachmentName = payload[0].getName();
+flowVars.mailContent = payload[0].getContent()]]></expression-component>
+		<set-payload value="Recebemos seu email!!!
+
+Ele ser&#225; processado em breve.
+
+N&#195;O RESPONDA ESSE EMAIL - RESPOSTA AUTOM&#193;TICA"
+			doc:name="Set Confirmation Message" mimeType="text/plain" />
+        <set-property propertyName="subject" value="[CONFIRMA&#199;&#195;O] - #[flowVars.subject]" doc:name="Set Subject Property"/>
+		<smtp:outbound-endpoint connector-ref="Gmail"
+			host="smtp.gmail.com" port="587" user="vf.souzaac%40gmail.com"
+			password="0211#$F@m1lia4" to="#[flowVars.from]" from="vf.souzaac@gmail.com" doc:name="Send Confirmation Receivement Email" responseTimeout="10000"/>
+
+		<set-payload doc:name="Set Payload to Attachment content"
+			metadata:id="359939d1-e0b0-4882-ba79-4eebc7ff9620" mimeType="application/xml"
+			value="#[flowVars.mailContent]" />
+		<file:outbound-endpoint doc:name="File"
+			outputPattern="#[flowVars.attachmentName]" path="src/test/resources/output"
+			responseTimeout="10000" />
+        <exception-strategy ref="Exception_Treatments" doc:name="Reference Exception Strategy"/>
+	</flow>
+    <choice-exception-strategy name="Exception_Treatments">
+        <catch-exception-strategy when="#[exception.causeMatches('org.mule.api.expression.ExpressionRuntimeException')]" doc:name="Runtime Exception Strategy">
+            <set-payload value="Recebemos seu email, por&#233;m n&#227;o foi possivel processa-lo. Certifique-se que a nota foi anexada corretamente e que seu formato &#233; .XML
+
+MOTIVO: Email sem anexo ou formato inv&#225;lido.
+
+
+N&#195;O RESPONDA ESSE EMAIL - RESPOSTA AUTOM&#193;TICA" doc:name="Error message"/>
+            <set-property propertyName="subject" value="[ERRO DE PROCESSAMENTO] - #[flowVars.subject]" doc:name="Error Subject Property"/>
+            <smtp:outbound-endpoint host="smtp.gmail.com" port="587" user="vf.souzaac%40gmail.com" password="0211#$F@m1lia4" connector-ref="Gmail" to="#[flowVars.from]" from="vf.souzaac@gmail.com" responseTimeout="10000" doc:name="Send Error Receivement Email"/>
+        </catch-exception-strategy>
+    </choice-exception-strategy>
+</mule>

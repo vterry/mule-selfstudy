@@ -1,0 +1,7 @@
+<credit_analisys>
+  <customer>
+    <name>Teste</name>
+    <document_type>CPF</document_type>
+    <document_id>111.222.333-44</document_id>
+  </customer>
+</credit_analisys>
