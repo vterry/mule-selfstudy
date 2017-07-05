@@ -1,0 +1,50 @@
+#%RAML 1.0
+title: American Flights Api
+version: 1.0
+#baseUri: http://american-flights-imp.cloudhub.io
+baseUri: https://mocksvc.mulesoft.com/mocks/0a2c9826-61fd-48a8-83f0-ca2975f4db6a
+
+/task:
+  get:
+    queryParameters:
+      id:
+    responses:
+      200:
+        body:
+          application/json:
+            example: |
+              { "ID": 86849091, "Task name": "Pass in Exams", "Description": "Keep studying", "Target date": "23-01-2017" }
+  post:
+    queryParameters: 
+      taskname:
+      description:
+      target:
+    responses:
+      201:
+        body:
+          application/json:
+            example: |
+              {"message": "Task Registered!!!"}
+  
+  put:
+    queryParameters: 
+      taskname:
+      description:
+      target:
+    responses:
+      200:
+        body: 
+          application/json: 
+            example: |
+              {"message": "Task Updated!!!"}
+
+  
+  delete:
+    queryParameters: 
+      id:
+    responses:
+      204:
+        body: 
+          application/json: 
+            example: |
+              {"message": "Task Deleted!!!"}
